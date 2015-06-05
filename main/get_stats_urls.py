@@ -40,6 +40,12 @@ data_dirs     = {'1':'hgnd',
                              '3':'fsjd',
                              '4':'fsyd'}
 
+def generate_tmp():
+    #头部客更换
+    header = '1432'
+    randnum = random.randint(111111111,999999999)
+    return header + str(randnum) 
+
 def load_dict(tdfile,key_col,value_col_list):
     """
         根据文件和列来构造dict数据结构
@@ -77,26 +83,30 @@ def load_dict(tdfile,key_col,value_col_list):
 
 def construct_urls(data_cls,data_dir,area_codes):
     """
-    
+    通过指标构造url，tmp后几位随机生成
+    用次函数构造的url获取数据，会返回所有年份数据，包括空数据。
+    这种方式不建议采用
     """
     urls = []
     url = ""
     init_url = "http://data.stats.gov.cn/workspace/index?a=l&"
-    tmp = ""
-    m = data_cls
-    url = init_url + "tmp="+tmp+"&"
-    url = url + "m=" + m + "&"
-    inlist_filename = os.path.join(data_dir,"index_list.data")
+    
+    inlist_filename = os.path.join(data_dir,"index_list.dat")
     indexes_list = []
     try:
         fin = open(inlist_filename)
     except Exception,e:
-        print inlist_filename,"文件打开失败".decode("utf08").encode(type)
+        print inlist_filename,"文件打开失败".decode("utf-8").encode(type)
         sys.exit()
     else:
         indexes_list = fin.readlines()
     if data_cls == "hgnd":
         for indexes in indexes_list:
+            url = ""
+            tmp = generate_tmp()
+            m = data_cls
+            url = init_url + "tmp="+tmp+"&"
+            url = url + "m=" + m + "&"
             index_list = eval(indexes)
             index_str = '%2C'.join(index_list)
             url = url + "index=" + index_str + "&"
@@ -127,6 +137,7 @@ def construct_urls(data_cls,data_dir,area_codes):
             url = url + "region=" + region  + "&"
             url = url  + 'time=-1%2C200305&selectId=110000&third=region'
     return urls
+
 
 def data_extract(data_dir):
     print "正在抽取".decode('utf-8').encode(type),data_dir,"下的数据".decode('utf-8').encode(type)
@@ -258,6 +269,10 @@ def get_data(data_cls,data_dir,area_codes_list):
     data_dir:数据目录
     """    
     urls = load_urls(data_dir)
+    #urls_ = construct_urls(data_cls,data_dir,area_codes_list)
+    #for tmp_ in urls:
+     #   if tmp_ == urls_[0]:
+    #      print tmp_
     cf = ConfigParser.ConfigParser()
     cf.read("stats_data.conf")
     
@@ -336,7 +351,7 @@ def get_data(data_cls,data_dir,area_codes_list):
     
 def letter_quarter(filename,foutname,patterns):
     """
-        将包含年份字母的字段转化为年份 季度 ，如2004A  转化为 2004    一季度
+    将包含年份字母的字段转化为年份 季度 ，如2004A  转化为 2004    一季度
     200401  转化为2004    1月份
     filename 文件名
     patterns 转换模式
