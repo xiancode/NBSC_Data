@@ -80,25 +80,54 @@ def construct_urls(data_cls,data_dir,area_codes):
     
     """
     urls = []
-    init_url = "http://data.stats.gov.cn/workspace/index?a=l"
+    url = ""
+    init_url = "http://data.stats.gov.cn/workspace/index?a=l&"
+    tmp = ""
+    m = data_cls
+    url = init_url + "tmp="+tmp+"&"
+    url = url + "m=" + m + "&"
     inlist_filename = os.path.join(data_dir,"index_list.data")
-    indexex_list = []
+    indexes_list = []
     try:
         fin = open(inlist_filename)
     except Exception,e:
-        print "文件打开失败".decode("utf08").encode(type)
+        print inlist_filename,"文件打开失败".decode("utf08").encode(type)
+        sys.exit()
     else:
-        indexex_list = fin.readlines()
-        
-    
+        indexes_list = fin.readlines()
     if data_cls == "hgnd":
-        
-        pass
-    
-    else:
-        pass
-    
-  
+        for indexes in indexes_list:
+            index_list = eval(indexes)
+            index_str = '%2C'.join(index_list)
+            url = url + "index=" + index_str + "&"
+            url = url + 'region=000000&time=-1%2C2004&selectId=000000&third=region'
+            urls.append(url)
+    elif data_cls == "fsjd":
+        for indexes in indexes_list:
+            index_list = eval(indexes)
+            index_str = '%2C'.join(index_list)
+            url = url + "index=" + index_str + "&"
+            region = '%2C'.join(area_codes)
+            url = url + "region=" + region  + "&"
+            url = url  + 'time=-1%2C2004A&selectId=110000&third=region'
+    elif data_cls == "fsnd":
+        for indexes in indexes_list:
+            index_list = eval(indexes)
+            index_str = '%2C'.join(index_list)
+            url = url + "index=" + index_str + "&"
+            region = '%2C'.join(area_codes)
+            url = url + "region=" + region  + "&"
+            url = url  + 'time=-1%2C2004&selectId=110000&third=region'
+    elif data_cls == "fsyd":
+        for indexes in indexes_list:
+            index_list = eval(indexes)
+            index_str = '%2C'.join(index_list)
+            url = url + "index=" + index_str + "&"
+            region = '%2C'.join(area_codes)
+            url = url + "region=" + region  + "&"
+            url = url  + 'time=-1%2C200305&selectId=110000&third=region'
+    return urls
+
 def data_extract(data_dir):
     print "正在抽取".decode('utf-8').encode(type),data_dir,"下的数据".decode('utf-8').encode(type)
     filelist = []
