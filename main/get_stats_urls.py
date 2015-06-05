@@ -75,101 +75,30 @@ def load_dict(tdfile,key_col,value_col_list):
     fin.close()
     return result
 
-
-def get_stats_urls(filename):
+def construct_urls(data_cls,data_dir,area_codes):
     """
-        从统计局数据查询页面生成的har文件中获取url
+    
     """
+    urls = []
+    init_url = "http://data.stats.gov.cn/workspace/index?a=l"
+    inlist_filename = os.path.join(data_dir,"index_list.data")
+    indexex_list = []
     try:
-        har = open(filename)
+        fin = open(inlist_filename)
     except Exception,e:
-        print e
+        print "文件打开失败".decode("utf08").encode(type)
     else:
-        print filename," 文件打开成功".decode('utf-8').encode(type)
+        indexex_list = fin.readlines()
+        
     
-    har_content = har.readlines()
-    print len(har_content)
-    url_pattern = re.compile('((http|ftp|https)://)(([a-zA-Z0-9\._-]+\.[a-zA-Z]{2,6})|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,4})*(/[a-zA-Z0-9\&%_\./-~-]*)?')
-    urls = set()
-    for line in har_content:
-        m = re.search(url_pattern,line)
-        if m:
-            urls.add(m.group(0))
-    print "共获得:".decode('utf-8').encode(type),len(urls),"条url".decode('utf-8').encode(type)
-    print "条件过滤中....."
-    workspace_urls = set()
-    for url in urls:
-        if url.find(r'workspace/index?') != -1 and url.find(r'tmp=') != -1:
-            workspace_urls.add(url)
-    print "符合条件的url共".decode('utf-8').encode(type),len(workspace_urls),"条".decode('utf-8').encode(type)
-    urls_file = open("urls.txt","w")
-    for url in workspace_urls:
-        urls_file.write(url+"\n")
-
-    urls_file.close()
-    har.close()
-    return workspace_urls
-
-def get_fsnd_data(urls,area_codes_list):
-    """
-    urls_list:url list
-    area_codes_list: 所有地区的编号，用于构造新url
-    """
-    #需要替换的时间
-    time_pattern = re.compile('&time=-1%2C\d{4}&')
-    #需要替换的检索地区
-    select_pattern = re.compile('&selectId=\d{6}&')
-    #日志文件
-    log_file = open("url_error.txt","w")
-    for area_code in area_codes_list:
-        print "当前处理地区:".decode('utf-8').encode(type),area_code
-        #为地区数据文件创建文件夹
-        area_dir = "./data/"+area_code
-        if os.path.exists(area_dir):
-            pass
-        else:
-            try:
-                os.makedirs(area_dir)
-            except  Exception,e:
-                print area_dir,"文件夹创建失败".decode('utf-8').encode(type),e
-                sys.exit()
-        #获取数据
-        file_no = 0
-        for url in urls:
-            file_no += 1
-            if file_no%50==0:
-                #print "已经处理:".decode('utf-8').encode(type),file_no,"条数据".decode('utf-8').encode(type),"\r"
-                sys.stdout.write("已经处理:".decode('utf-8').encode(type)+str(file_no)+"条数据".decode('utf-8').encode(type)+"\r")
-            target_url = url
-            target_area = "&selectId="+str(area_code)+"&"
-            target_url = re.sub(time_pattern,"&time=-1%2C1949&",target_url)
-            target_url = re.sub(select_pattern,target_area,target_url)
-            #等在0-3秒，防止被屏蔽
-            #获取数据
-            wait_time = 3*random.random()
-            time.sleep(wait_time)
-            try:
-                page = urllib.urlopen(target_url)
-                data = page.read()
-            except Exception,e:
-                log_file.write(url+"\n"+e+"\n")
-            else:
-                pass
-            #下载数据
-            try:
-                file_name = str(file_no)+".dat"
-                save_path  = os.path.join(area_dir,file_name)
-                fin = open(save_path,"w")
-                fin.write(data)
-                fin.close()
-            except Exception,e:
-                print file_no,":",e
-            else:
-                #print file_no," 文件保存成功"
-                pass        
-        log_file.close()           
+    if data_cls == "hgnd":
+        
+        pass
     
+    else:
+        pass
     
+  
 def data_extract(data_dir):
     print "正在抽取".decode('utf-8').encode(type),data_dir,"下的数据".decode('utf-8').encode(type)
     filelist = []
@@ -220,12 +149,11 @@ def data_extract(data_dir):
                         indicator_meta.write(in_id+"\t"+in_name+"\t"+unit+"\t"+note+"\t"+in_ename+"\t"+in_eunit+"\t"+enote+"\n")
 
             fin.close() 
-
-
     indicator_num_file.close()
     indicator_meta.close()
     #返回数值文件名和指标元信息文件名
     return [indicator_num_filename,indicator_meta_filename]
+
 
 def merge(finame,col,d,foutname):
     """
@@ -278,7 +206,6 @@ def merge(finame,col,d,foutname):
         else:
             print line,"格式有错误,此行与首行字段个数不一致".decode('utf-8').encode(type)    
         line = fin.readline()
-        
     fin.close()
     fout.close()
     return foutname
@@ -408,9 +335,7 @@ def letter_quarter(filename,foutname,patterns):
                         for i  in range(len(items)-1):
                             fout.write(items[i]+"\t")
                         fout.write(items[-1])
-            
     fout.close()
-
 
 
 def stats_data():
@@ -445,7 +370,6 @@ def stats_data():
             sys.exit()
         else:
             pass
-        
     print "载入地区列表中".decode('utf-8').encode(type)
     area_code_dict  = load_dict("area_code", 0, [1])
     area_codes = area_code_dict.keys()
